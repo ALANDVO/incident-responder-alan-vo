@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "current_feature": "incident-triage-baseline",
+  "features": [
+    {
+      "id": "incident-triage-baseline",
+      "title": "Incident triage, blast radius analysis, and comms generation",
+      "status": "done",
+      "acceptance": [
+        "Classify incident severity across SEV1-SEV4 with confidence scoring and containment playbooks",
+        "Compute blast radius affected services, dependencies, and data impact",
+        "Generate multi-channel communication drafts for Status Page, Slack, and email templates",
+        "Full FastAPI backend with persistent SQLite storage and JWT/OIDC authentication routes",
+        "React + TypeScript frontend dashboard with responsive workflow interfaces"
+      ],
+      "implementation": [
+        "backend/app/main.py",
+        "backend/app/api/incidents.py",
+        "backend/app/services/incident.py",
+        "frontend/src/App.tsx",
+        "frontend/src/pages/IncidentDetailPage.tsx"
+      ],
+      "tests": [
+        "backend/tests/test_auth.py",
+        "backend/tests/test_incidents.py",
+        "frontend/src/App.test.tsx"
+      ]
+    },
+    {
+      "id": "keycloak-oidc-production-broker",
+      "title": "Keycloak OIDC and SAML identity brokering integration",
+      "status": "planned",
+      "acceptance": [
+        "Validate Keycloak authorization code flow with PKCE",
+        "Sync upstream SAML user groups and roles directly"
+      ],
+      "implementation": [],
+      "tests": []
+    },
+    {
+      "id": "real-time-pagerduty-webhook",
+      "title": "Real-time PagerDuty and OpsGenie webhook ingestion",
+      "status": "planned",
+      "acceptance": [
+        "Parse automated incoming alerts into incident timeline",
+        "Automatically trigger SEV classification on high-urgency alarms"
+      ],
+      "implementation": [],
+      "tests": []
+    }
+  ]
+}
