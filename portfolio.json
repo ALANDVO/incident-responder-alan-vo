@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "name": "incident-responder-alan-vo",
+  "version": "1.0.0",
+  "owner": "ALANDVO",
+  "email": "alanvo@gmail.com",
+  "domain": "AI/ML developer tools",
+  "summary": "Work in progress: incident-responder-alan-vo",
+  "workflows": [
+    "Incident severity classification (SEV1-SEV4) with confidence and deterministic containment playbooks",
+    "Blast radius topological dependency mapping and impact radius estimation",
+    "Multi-channel communications generation across Status Page, Slack, and Email formats"
+  ],
+  "auth": "oidc-keycloak-saml-broker",
+  "llm_providers": [
+    "openai-compatible",
+    "anthropic",
+    "gemini",
+    "ollama"
+  ],
+  "status": "work-in-progress"
+}
