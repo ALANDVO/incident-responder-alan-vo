@@ -1,6 +1,6 @@
 [project]
 name = "incident-responder"
-version = "1.0.0"
+version = "1.1.0"
 description = "AI incident response copilot that classifies severity, identifies blast radius, suggests containment steps, and generates comms templates."
 authors = [{ name = "Alan Vo", email = "alanvo@gmail.com" }]
 license = { text = "MIT" }

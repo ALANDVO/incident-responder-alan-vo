@@ -7,7 +7,7 @@ import secrets
 class Settings(BaseSettings):
     # App
     app_name: str = "incident-responder"
-    app_version: str = "1.0.0"
+    app_version: str = "1.1.0"
     debug: bool = False
     host: str = "127.0.0.1"
     port: int = 8000

@@ -24,6 +24,13 @@ from app.schemas import (
     PostmortemRequest,
 )
 from app.services.llm import LLMClient, LLMProvider
+from app.services.classifier import (
+    classify_incident,
+    generate_containment_plan,
+    analyze_blast_radius,
+    generate_comms_template,
+    generate_postmortem_skeleton,
+)
 from app.core.config import settings
  
  
@@ -124,11 +131,13 @@ class IncidentService:
             return None
 
         if not self.llm or not request.use_llm:
-            # Deterministic fallback
-            severity = SeverityLevel.SEV3
-            confidence = 0.5
-            reasoning = "Fallback classification (LLM unavailable). Manual review required."
-            containment = "1. Acknowledge incident\n2. Assemble response team\n3. Assess impact\n4. Implement containment\n5. Communicate to stakeholders"
+            # Deterministic fallback — rule-based classification engine
+            context = self._build_incident_context(incident)
+            result = classify_incident(context)
+            severity = result.severity
+            confidence = result.confidence
+            reasoning = f"[Deterministic] {result.reasoning}"
+            containment = generate_containment_plan(severity, result)
         else:
             context = self._build_incident_context(incident)
             classification = await self.llm.classify(
@@ -154,8 +163,8 @@ class IncidentService:
             confidence=confidence,
             reasoning=reasoning,
             containment_plan=containment,
-            llm_provider=settings.llm_provider if self.llm else "fallback",
-            llm_model=settings.llm_model if self.llm else "none",
+            llm_provider=settings.llm_provider if (self.llm and request.use_llm) else "fallback",
+            llm_model=settings.llm_model if (self.llm and request.use_llm) else "none",
         )
         self.db.add(triage)
 
@@ -177,11 +186,15 @@ class IncidentService:
             return None
 
         if not self.llm or not request.use_llm:
-            affected_services = request.services or ["unknown"]
-            data_impact = "Unknown (LLM unavailable). Manual assessment required."
-            dependency_chain = "Unknown (LLM unavailable)."
-            user_impact = "Unknown (LLM unavailable)."
-            recovery_estimate = "Unknown (LLM unavailable)."
+            context = self._build_incident_context(incident)
+            blast_data = analyze_blast_radius(
+                context, explicit_services=request.services
+            )
+            affected_services = blast_data["affected_services"]
+            data_impact = blast_data["data_impact"]
+            dependency_chain = blast_data["dependency_chain"]
+            user_impact = blast_data["user_impact"]
+            recovery_estimate = blast_data["recovery_estimate"]
         else:
             context = self._build_incident_context(incident)
             services_str = ", ".join(request.services) if request.services else "auto-detect from logs"
@@ -212,8 +225,8 @@ class IncidentService:
             dependency_chain=dependency_chain,
             user_impact=user_impact,
             recovery_estimate=recovery_estimate,
-            llm_provider=settings.llm_provider if self.llm else "fallback",
-            llm_model=settings.llm_model if self.llm else "none",
+            llm_provider=settings.llm_provider if (self.llm and request.use_llm) else "fallback",
+            llm_model=settings.llm_model if (self.llm and request.use_llm) else "none",
         )
         self.db.add(blast)
         await self.db.commit()
@@ -251,11 +264,20 @@ class IncidentService:
             },
         }
 
-        instruction = templates.get(request.channel, {}).get(request.phase, templates[CommsChannel.STATUS][CommsPhase.INITIAL])
-
         if not self.llm or not request.use_llm:
-            content = f"[FALLBACK TEMPLATE - LLM unavailable]\n\n{instruction}\n\nIncident: {incident.title}"
+            # Deterministic fallback — generate comms template from incident data
+            context = self._build_incident_context(incident)
+            classification = classify_incident(context)
+            content = generate_comms_template(
+                channel=request.channel,
+                phase=request.phase,
+                incident_title=incident.title,
+                incident_description=incident.description,
+                severity=classification.severity,
+                classification=classification,
+            )
         else:
+            instruction = templates.get(request.channel, {}).get(request.phase, templates[CommsChannel.STATUS][CommsPhase.INITIAL])
             context = self._build_incident_context(incident)
             content = await self.llm.generate(
                 f"Incident data:\n{context[:4000]}\n\n{instruction}\n\n"
@@ -268,8 +290,8 @@ class IncidentService:
             channel=request.channel,
             phase=request.phase,
             content=content,
-            llm_provider=settings.llm_provider if self.llm else "fallback",
-            llm_model=settings.llm_model if self.llm else "none",
+            llm_provider=settings.llm_provider if (self.llm and request.use_llm) else "fallback",
+            llm_model=settings.llm_model if (self.llm and request.use_llm) else "none",
         )
         self.db.add(comms)
         await self.db.commit()
@@ -282,17 +304,20 @@ class IncidentService:
             return None
 
         if not self.llm or not request.use_llm:
-            summary = "Postmortem generation unavailable (LLM not configured)."
-            timeline = "Timeline reconstruction requires LLM."
-            root_cause = "Root cause analysis requires LLM."
-            what_went_well = "Team responded promptly."
-            what_went_poorly = "Insufficient monitoring/alerting."
-            contributing_factors = "Systemic factors to be analyzed."
-            action_items = [
-                {"id": 1, "action": "Add monitoring for X", "owner": "Team", "due": "2024-01-01", "priority": "high"},
-                {"id": 2, "action": "Update runbook", "owner": "Team", "due": "2024-01-15", "priority": "medium"},
-            ]
-            lessons_learned = "1. Improve observability\n2. Practice incident response"
+            # Deterministic fallback — generate postmortem skeleton from incident data
+            pm_data = generate_postmortem_skeleton(
+                incident_title=incident.title,
+                incident_description=incident.description,
+                incident_raw_data=incident.raw_data,
+            )
+            summary = pm_data["summary"]
+            timeline = pm_data["timeline"]
+            root_cause = pm_data["root_cause"]
+            what_went_well = pm_data["what_went_well"]
+            what_went_poorly = pm_data["what_went_poorly"]
+            contributing_factors = pm_data["contributing_factors"]
+            action_items = pm_data["action_items"]
+            lessons_learned = pm_data["lessons_learned"]
         else:
             context = self._build_incident_context(incident)
             result = await self.llm.generate(
@@ -330,8 +355,8 @@ class IncidentService:
             contributing_factors=contributing_factors,
             action_items=action_items,
             lessons_learned=lessons_learned,
-            llm_provider=settings.llm_provider if self.llm else "fallback",
-            llm_model=settings.llm_model if self.llm else "none",
+            llm_provider=settings.llm_provider if (self.llm and request.use_llm) else "fallback",
+            llm_model=settings.llm_model if (self.llm and request.use_llm) else "none",
         )
         self.db.add(postmortem)
         await self.db.commit()

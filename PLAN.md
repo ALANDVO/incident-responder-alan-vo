@@ -4,7 +4,7 @@ Each round completes one feature or repair. Future items are planned, not implem
 
 ## Current round
 
-incident-triage-baseline
+deterministic-classification-engine
 
 ## Roadmap
 
@@ -22,6 +22,22 @@ Acceptance:
 Implementation: `backend/app/main.py`, `backend/app/api/incidents.py`, `backend/app/services/incident.py`, `frontend/src/App.tsx`, `frontend/src/pages/IncidentDetailPage.tsx`
 
 Tests: `backend/tests/test_auth.py`, `backend/tests/test_incidents.py`, `frontend/src/App.test.tsx`
+
+### deterministic-classification-engine — Rule-based severity classification and containment playbooks
+
+Status: in_progress
+
+Acceptance:
+- Classify incident severity (SEV1-SEV4) from incident text using keyword and pattern matching with confidence scoring
+- SEV1 indicators take precedence over lower severity levels
+- Generate incident-specific containment playbooks per severity level
+- Extract affected infrastructure services from incident text for blast-radius analysis
+- Generate multi-channel comms templates (Status Page, Slack, Email) without leaking instruction text
+- Generate deterministic postmortem skeleton with service extraction and severity-based action items
+
+Implementation: `backend/app/services/classifier.py`, `backend/app/services/incident.py`
+
+Tests: `backend/tests/test_classifier.py`, `backend/tests/test_incidents.py`
 
 ### keycloak-oidc-production-broker — Keycloak OIDC and SAML identity brokering integration
 
