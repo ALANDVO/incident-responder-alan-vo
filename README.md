@@ -3,7 +3,7 @@
 > Work in progress. This checkpoint may be incomplete or fail tests. See PLAN.md and STATUS.md before use.
 
 
-Current version: `1.0.0`.
+Current version: `1.1.0`.
 
 > AI incident response copilot that ingests incident logs, classifies severity, maps blast radiuses across dependency graphs, synthesizes containment playbooks, and drafts multi-channel stakeholder communications.
 
@@ -46,15 +46,28 @@ To reproduce the incident triage evaluation baseline against standard simulated 
 PYTHONPATH=backend .venv/bin/python -m pytest backend/tests -v
 ```
 
-### Labeled Incident Evaluation Matrix
-The evaluation set consists of 20 benchmark incident logs covering infrastructure failures, database deadlocks, network partitions, and security credential revocations:
+### Deterministic Classification Rules
 
-| Metric | Deterministic Baseline | LLM Augmented (gpt-4o) |
-|---|---|---|
-| SEV Accuracy | 85.0% | 95.0% |
-| Triage Latency | 2.4 ms | 1,280 ms |
-| Containment Plan Relevance | 80.0% | 92.5% |
-| Blast Radius Precision | 75.0% | 90.0% |
+The deterministic baseline (`backend/app/services/classifier.py`) classifies incidents from text using ordered keyword/regex patterns:
+- **SEV1** (critical): outage, down, unavailable, crash, data loss, data corruption, breach, connection refused, 502/500/503, all-users-impacted
+- **SEV2** (high): degraded, slow, latency, timeout, failing, failure, overloaded, throttling, saturated, replication lag, disk full, partial outage
+- **SEV3** (medium): warning, intermittent, flapping, slow query, retrying, pool exhausted, elevated
+- **SEV4** (low): informational, cosmetic, routine maintenance, deprecated, log noise
+
+Severity precedence resolves to the **highest** matching level. Confidence is computed from indicator count (3% per match, max 15%) plus impact keywords (2% per match, max 10%), added to a per-level base (SEV1: 0.80, SEV2: 0.65, SEV3: 0.45, SEV4: 0.25).
+
+To verify the deterministic classifier against labeled incident vectors:
+
+```bash
+PYTHONPATH=backend .venv/bin/python -m pytest backend/tests/test_classifier.py::TestClassifyIncident -v
+```
+
+| Metric | Deterministic Baseline |
+|---|---|
+| Severity Classification | Rule-based SEV1–SEV4 with keyword precedence |
+| Classification Latency | < 1 ms (in-process, no I/O) |
+| Confidence Scoring | 0.10–0.95 based on indicator count and impact keywords |
+| Service Extraction | Regex-based infrastructure name detection |
 
 ### Failure Cases and Limitations
 1. **Unformatted / Truncated Logs**: If logs lack service identifiers or error codes, the deterministic baseline defaults conservatively to SEV3 for human review.

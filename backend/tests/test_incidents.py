@@ -111,8 +111,11 @@ async def test_triage_incident_deterministic(client, auth_token):
     assert triage_resp.status_code == 200
     triage_data = triage_resp.json()
     assert triage_data["incident_id"] == incident_id
-    assert triage_data["severity"] in ["SEV1", "SEV2", "SEV3", "SEV4"]
+    assert triage_data["severity"] == "SEV1"
     assert len(triage_data["containment_plan"]) > 0
+    assert "Containment Playbook" in triage_data["containment_plan"]
+    assert "Deterministic" in triage_data["reasoning"]
+    assert triage_data["llm_provider"] == "fallback"
 
 
 @pytest.mark.anyio
@@ -137,6 +140,9 @@ async def test_blast_radius_analysis_deterministic(client, auth_token):
     assert blast_resp.status_code == 200
     blast_data = blast_resp.json()
     assert "cache" in blast_data["affected_services"]
+    assert "redis" in blast_data["affected_services"]
+    assert "Unknown (LLM unavailable)" not in blast_data["data_impact"]
+    assert "Affected components" in blast_data["dependency_chain"]
     assert blast_data["incident_id"] == incident_id
 
 
@@ -165,6 +171,9 @@ async def test_comms_template_generation_deterministic(client, auth_token):
     assert comms_data["channel"] == "status"
     assert comms_data["phase"] == "initial"
     assert len(comms_data["content"]) > 0
+    assert "LLM unavailable" not in comms_data["content"]
+    assert "Write the" not in comms_data["content"]
+    assert "investigating" in comms_data["content"].lower()
 
 
 @pytest.mark.anyio
@@ -187,6 +196,9 @@ async def test_postmortem_generation_deterministic(client, auth_token):
     assert pm_data["incident_id"] == incident_id
     assert len(pm_data["summary"]) > 0
     assert len(pm_data["timeline"]) > 0
+    assert "SEV1" in pm_data["summary"]
+    assert "[TO BE VERIFIED]" in pm_data["root_cause"]
+    assert len(pm_data["action_items"]) >= 2
 
 
 @pytest.mark.anyio
