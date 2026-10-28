@@ -548,12 +548,20 @@ def generate_postmortem_skeleton(
     incident_title: str,
     incident_description: str,
     incident_raw_data: Optional[str] = None,
+    detected_at: Optional[datetime] = None,
 ) -> Dict[str, Any]:
     """Generate a deterministic postmortem skeleton from incident data.
 
     Reconstructs a timeline, root-cause hypothesis, and action items from
     incident text and severity classification.  Values not supported by the
     data are explicitly marked as **[TO BE VERIFIED]**.
+
+    Args:
+        incident_title: Brief title of the incident.
+        incident_description: Detailed description of the incident.
+        incident_raw_data: Optional raw alert/log data for additional context.
+        detected_at: Optional detection timestamp. If not provided, uses a
+            fixed reference time for deterministic output.
     """
     full_text = incident_title + "\n" + incident_description
     if incident_raw_data:
@@ -576,8 +584,11 @@ def generate_postmortem_skeleton(
         f"Services indicated: {service_str}."
     )
 
+    # Use fixed reference time for deterministic output if not provided
+    ref_time = detected_at or datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+
     timeline = (
-        f"1. Incident detected at {datetime.now(tz=timezone.utc).isoformat()}Z - alert triggered.\n"
+        f"1. Incident detected at {ref_time.isoformat()}Z - alert triggered.\n"
         f"2. Initial triage - severity {classification.severity.value} assigned by deterministic engine.\n"
         f"3. Response team engaged - containment plan activated.\n"
         f"4. Resolution - in progress / [TO BE VERIFIED]"

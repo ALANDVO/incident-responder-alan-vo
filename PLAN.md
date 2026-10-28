@@ -25,7 +25,7 @@ Tests: `backend/tests/test_auth.py`, `backend/tests/test_incidents.py`, `fronten
 
 ### deterministic-classification-engine — Rule-based severity classification and containment playbooks
 
-Status: in_progress
+Status: done
 
 Acceptance:
 - Classify incident severity (SEV1-SEV4) from incident text using keyword and pattern matching with confidence scoring
@@ -34,6 +34,7 @@ Acceptance:
 - Extract affected infrastructure services from incident text for blast-radius analysis
 - Generate multi-channel comms templates (Status Page, Slack, Email) without leaking instruction text
 - Generate deterministic postmortem skeleton with service extraction and severity-based action items
+- Postmortem timeline uses fixed reference time for deterministic output; optional detected_at parameter for custom timestamps
 
 Implementation: `backend/app/services/classifier.py`, `backend/app/services/incident.py`
 
