@@ -40,3 +40,7 @@ Partial code published for continued development. Known issues: STATUS.md.
 - Multi-provider LLM client supporting OpenAI, Anthropic Claude, Google Gemini, and local Ollama endpoints.
 - Docker containerization and compose topology with Keycloak identity broker integration.
 - Full automated test suite for backend services, API routes, and frontend components.
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

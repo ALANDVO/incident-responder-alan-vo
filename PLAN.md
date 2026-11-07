@@ -56,3 +56,6 @@ Acceptance:
 - Parse automated incoming alerts into incident timeline
 - Automatically trigger SEV classification on high-urgency alarms
 
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)

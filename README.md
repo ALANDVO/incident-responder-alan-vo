@@ -158,3 +158,7 @@ npm run dev
 ---
 
 **Alan Vo** — <alanvo@gmail.com> — [GitHub @ALANDVO](https://github.com/ALANDVO)
+
+---
+
+Alan Vo · [alanvo.net](https://alanvo.net)
