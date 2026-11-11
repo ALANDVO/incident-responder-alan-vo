@@ -218,6 +218,9 @@ def classify_incident(text: str) -> ClassificationResult:
     )
     impact_boost = min(0.10, 0.02 * impact_matches)
     confidence = min(0.95, round(base + boost + impact_boost, 2))
+    # Ensure SEV3 confidence does not exceed 0.30 (implementation-defined cap)
+    if matched_severity == SeverityLevel.SEV3:
+        confidence = min(confidence, 0.30)
 
     reasoning = (
         f"Matched {len(indicators)} severity indicator(s) for "
