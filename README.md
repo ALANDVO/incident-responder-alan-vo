@@ -66,7 +66,7 @@ PYTHONPATH=backend .venv/bin/python -m pytest backend/tests/test_classifier.py::
 |---|---|
 | Severity Classification | Rule-based SEV1–SEV4 with keyword precedence |
 | Classification Latency | < 1 ms (in-process, no I/O) |
-| Confidence Scoring | 0.10–0.95 based on indicator count and impact keywords |
+Confidence Scoring | 0.10–0.95 (SEV3 capped at 0.30) based on indicator count and impact keywords
 | Service Extraction | Regex-based infrastructure name detection |
 
 ### Failure Cases and Limitations
