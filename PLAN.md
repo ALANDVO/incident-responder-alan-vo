@@ -42,11 +42,15 @@ Tests: `backend/tests/test_classifier.py`, `backend/tests/test_incidents.py`
 
 ### keycloak-oidc-production-broker — Keycloak OIDC and SAML identity brokering integration
 
-Status: planned
+Status: in_progress
 
 Acceptance:
 - Validate Keycloak authorization code flow with PKCE
 - Sync upstream SAML user groups and roles directly
+
+Implementation: `backend/app/services/auth.py`
+
+Tests: `backend/tests/test_pkce.py`
 
 ### real-time-pagerduty-webhook — Real-time PagerDuty and OpsGenie webhook ingestion
 
