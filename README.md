@@ -3,7 +3,7 @@
 > Work in progress. This checkpoint may be incomplete or fail tests. See PLAN.md and STATUS.md before use.
 
 
-Current version: `1.4.0`.
+Current version: `1.5.0`.
 
 > AI incident response copilot that ingests incident logs, classifies severity, maps blast radiuses across dependency graphs, synthesizes containment playbooks, and drafts multi-channel stakeholder communications.
 

@@ -6,6 +6,7 @@ from app.core.config import settings
 import base64
 import hashlib
 import os
+import secrets
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -53,31 +54,71 @@ class TokenData:
 # Keycloak OIDC PKCE support
 # ---------------------------------------------------------------------------
 
+# RFC 7636 §4.2/§4.3: only "S256" (SHA-256) is a mandatory-to-implement method.
+PKCE_CODE_CHALLENGE_METHOD = "S256"
+
+# RFC 7636 §4.1: code_verifier is 43-128 chars of [A-Z a-z 0-9 - . _ ~].
+_VERIFIER_ALLOWED = frozenset(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+)
+
+
+def pkce_s256_challenge(code_verifier: str) -> str:
+    """Compute the S256 code challenge for a code verifier (RFC 7636 §4.2).
+
+    challenge = BASE64URL-ENCODE(SHA256(ASCII(code_verifier)))
+    """
+    digest = hashlib.sha256(code_verifier.encode("ascii")).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode()
+
+
 def generate_pkce_pair() -> Tuple[str, str]:
-    """Generate a PKCE code verifier and code challenge pair.
+    """Generate a PKCE code verifier and its S256 code challenge.
 
     Returns:
         Tuple of (code_verifier, code_challenge)
-        - code_verifier: random 32-byte base64url-encoded string (88 chars)
-        - code_challenge: SHA-256 hash of verifier, base64url-encoded (43 chars)
+        - code_verifier: 43-char base64url string drawn from 32 random bytes
+        - code_challenge: S256 (SHA-256 + base64url) hash of the verifier
     """
     verifier = base64.urlsafe_b64encode(os.urandom(32)).rstrip(b"=").decode()
-    # SHA-256 hash of the verifier, base64url-encoded
-    challenge = (
-        base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
-        .rstrip(b"=")
-        .decode()
-    )
-    return verifier, challenge
+    return verifier, pkce_s256_challenge(verifier)
 
 
-def pkce_code_verifier_from_challenge(challenge: str) -> Optional[str]:
-    """Recover the code verifier from a code challenge (not recommended; store it server-side).
+def verify_pkce(
+    code_verifier: Optional[str],
+    code_challenge: str,
+    method: str = PKCE_CODE_CHALLENGE_METHOD,
+) -> bool:
+    """Validate a PKCE code_verifier against the stored code_challenge.
 
-    This is provided for completeness only; in practice the verifier should be stored
-    in the session and never reconstructed from the challenge.
+    Mirrors the check an authorization server performs during the token
+    exchange: recompute the challenge from the supplied verifier and compare
+    in constant time. Returns ``False`` for malformed input rather than
+    raising, so callers can map the result to an opaque ``invalid_grant``
+    response without leaking verifier state.
+
+    Args:
+        code_verifier: Verifier echoed by the client in the token request.
+        code_challenge: Challenge stored from the authorization request.
+        method: PKCE challenge method; only ``S256`` is supported.
+
+    Returns:
+        True if the verifier hashes to the challenge, else False.
     """
-    # Cannot reliably reverse SHA-256; return None
-    return None
+    if method != PKCE_CODE_CHALLENGE_METHOD:
+        return False
+    if not code_verifier or not code_challenge:
+        return False
+    if not (43 <= len(code_verifier) <= 128):
+        return False
+    if any(ch not in _VERIFIER_ALLOWED for ch in code_verifier):
+        return False
+    try:
+        expected = pkce_s256_challenge(code_verifier)
+    except (UnicodeEncodeError, ValueError):
+        return False
+    # Constant-time compare to avoid timing oracle on the challenge.
+    return secrets.compare_digest(expected, code_challenge)
+
 
 # end of Keycloak OIDC PKCE support
