@@ -42,7 +42,7 @@ Tests: `backend/tests/test_classifier.py`, `backend/tests/test_incidents.py`
 
 ### keycloak-oidc-production-broker — Keycloak OIDC and SAML identity brokering integration
 
-Status: in_progress
+Status: done
 
 Acceptance:
 - Validate Keycloak authorization code flow with PKCE

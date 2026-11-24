@@ -51,7 +51,7 @@
     {
       "id": "keycloak-oidc-production-broker",
       "title": "Keycloak OIDC and SAML identity brokering integration",
-      "status": "in_progress",
+      "status": "done",
       "acceptance": [
         "Validate Keycloak authorization code flow with PKCE",
         "Sync upstream SAML user groups and roles directly"
