@@ -54,11 +54,15 @@ Tests: `backend/tests/test_pkce.py`
 
 ### real-time-pagerduty-webhook — Real-time PagerDuty and OpsGenie webhook ingestion
 
-Status: planned
+Status: done
 
 Acceptance:
 - Parse automated incoming alerts into incident timeline
 - Automatically trigger SEV classification on high-urgency alarms
+
+Implementation: `backend/app/api/webhook.py`
+
+Tests: `backend/tests/test_webhook.py`
 
 ---
 

@@ -66,13 +66,17 @@
     {
       "id": "real-time-pagerduty-webhook",
       "title": "Real-time PagerDuty and OpsGenie webhook ingestion",
-      "status": "planned",
+      "status": "done",
       "acceptance": [
         "Parse automated incoming alerts into incident timeline",
         "Automatically trigger SEV classification on high-urgency alarms"
       ],
-      "implementation": [],
-      "tests": []
+      "implementation": [
+        "backend/app/api/webhook.py"
+      ],
+      "tests": [
+        "backend/tests/test_webhook.py"
+      ]
     }
   ]
 }
